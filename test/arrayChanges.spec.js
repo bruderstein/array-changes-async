@@ -1,10 +1,13 @@
 /*global describe, it, setTimeout, Symbol*/
 var arrayChanges = require('../lib/arrayChanges');
-var expect = require('unexpected');
+var expect = require('unexpected').clone()
+    .use(require('unexpected-check'));
+var generators = require('chance-generators');
 
 function toArguments() {
     return arguments;
 }
+
 function promiseArrayChanges(actual, expected, equal, similar, includeNonNumericalProperties) {
     var isCalled = 0;
     return expect.promise(function (resolve, reject) {
@@ -30,6 +33,43 @@ function promiseArrayChanges(actual, expected, equal, similar, includeNonNumeric
        });
     });
 }
+
+function executeDiff(changes) {
+    var result = [];
+
+    changes.forEach(function (item) {
+        switch (item.type) {
+        case 'moveTarget':
+        case 'insert':
+            result.push(item.value);
+            break;
+        case 'equal':
+        case 'similar':
+            if (typeof item.expected === 'number') {
+                result.push(item.expected);
+            }
+
+            break;
+        }
+    });
+
+    return result;
+}
+
+expect.addAssertion('<array> when diffed with <array> <assertion>', function (expect, actual, expected) {
+    expect.errorMode = 'nested';
+    return promiseArrayChanges(actual, expected, function (a, b, aIndex, bIndex, callback) {
+        return callback(a === b);
+    }).then(function (diff) {
+        return expect.shift(diff);
+    });
+});
+
+expect.addAssertion('<array> when executing the diff <assertion>', function (expect, diff) {
+    expect.errorMode = 'nested';
+    return expect.shift(executeDiff(diff));
+});
+
 
 describe('array-changes-async', function () {
     it('returns an empty change-list when the two arrays are both empty', function () {
@@ -354,5 +394,21 @@ describe('array-changes-async', function () {
             ]);
         });
     }
+
+    it('produces a valid plan', function () {
+        var g = generators(42);
+
+        var arrays = g.array(g.natural({ max: 10 }), g.natural({ max: 10 }));
+        return expect(function (actual, expected) {
+            return expect(
+                actual,
+                'when diffed with',
+                expected,
+                'when executing the diff',
+                'to equal',
+                expected
+            );
+        }, 'to be valid for all', arrays, arrays);
+    });
 });
 
