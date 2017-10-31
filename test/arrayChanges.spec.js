@@ -304,47 +304,106 @@ describe('array-changes-async', function () {
             ]);
     });
 
-    it('should diff arrays that have non-numerical property names', function () {
-        var a = [1, 2, 3];
-        a.foo = 123;
-        a.bar = 456;
-        a.quux = {};
+    describe('when including non-numerical properties', function () {
+        it('returns an empty change-list with an undefined key on the LHS', function () {
+            var a = [];
+            a.nothing = undefined;
+            var b = [];
 
-        var b = [1, 2, 3];
-        b.bar = 456;
-        b.baz = 789;
-        b.quux = false;
-        return expect(promiseArrayChanges(a, b, function (a, b, aIndex, bIndex, callback) {
-            callback(a === b);
-        }, function (a, b, aIndex, bIndex, callback) {
-            callback(a === b);
-        }, true), 'when fulfilled', 'to equal', [
-            { type: 'equal', value: 1, expected: 1, actualIndex: 0, expectedIndex: 0 },
-            { type: 'equal', value: 2, expected: 2, actualIndex: 1, expectedIndex: 1 },
-            { type: 'equal', value: 3, expected: 3, actualIndex: 2, expectedIndex: 2 },
-            { type: 'remove', value: 123, actualIndex: 'foo' },
-            { type: 'equal', value: 456, expected: 456, actualIndex: 'bar', expectedIndex: 'bar' },
-            { type: 'similar', value: {}, expected: false, actualIndex: 'quux', expectedIndex: 'quux' },
-            { type: 'insert', value: 789, expectedIndex: 'baz', last: true }
-        ]);
-    });
+            return expect(promiseArrayChanges(a, b, function (a, b, aIndex, bIndex, callback) {
+                callback(a === b);
+            }, undefined, true), 'when fulfilled', 'to equal', []);
+        });
 
-    it('should support an array of specific non-numerical keys to diff', function () {
-        var a = [1];
-        a.foo = 123;
-        a.bar = 789;
+        it('returns an empty change-list with an undefined key on the RHS', function () {
+            var a = [];
+            var b = [];
+            b.nothing = undefined;
 
-        var b = [1];
-        a.foo = 456;
-        a.bar = false;
-        return expect(promiseArrayChanges(a, b, function (a, b, aIndex, bIndex, callback) {
-            callback(a === b);
-        }, function (a, b, aIndex, bIndex, callback) {
-            callback(a === b);
-        }, [ 'foo' ]), 'when fulfilled', 'to equal', [
-            { type: 'equal', actualIndex: 0, expectedIndex: 0, value: 1, expected: 1 },
-            { type: 'remove', actualIndex: 'foo', value: 456, last: true }
-        ]);
+            return expect(promiseArrayChanges(a, b, function (a, b, aIndex, bIndex, callback) {
+                callback(a === b);
+            }, undefined, true), 'when fulfilled', 'to equal', []);
+        });
+
+        it('returns an empty change-list with undefined keys on both the LHS and RHS', function () {
+            var a = [];
+            a.nothing = undefined;
+            var b = [];
+            b.nothing = undefined;
+
+            return expect(promiseArrayChanges(a, b, function (a, b, aIndex, bIndex, callback) {
+                callback(a === b);
+            }, undefined, true), 'when fulfilled', 'to equal', []);
+        });
+
+        it('returns a change-list containing remove when a LHS key is undefined on the RHS', function () {
+            var a = [];
+            a.nothing = true;
+            var b = [];
+            b.nothing = undefined;
+
+            return expect(promiseArrayChanges(a, b, function (a, b, aIndex, bIndex, callback) {
+                callback(a === b);
+            }, undefined, true), 'when fulfilled', 'to equal', [
+                { type: 'remove', actualIndex: 'nothing', value: true, expected: undefined, last: true }
+            ]);
+        });
+
+        it('returns a change-list containing similar when a RHS key is undefined on the LHS', function () {
+            var a = [];
+            a.nothing = undefined;
+            var b = [];
+            b.nothing = true;
+
+            return expect(promiseArrayChanges(a, b, function (a, b, aIndex, bIndex, callback) {
+                callback(a === b);
+            }, undefined, true), 'when fulfilled', 'to equal', [
+                { type: 'similar', expectedIndex: 'nothing', actualIndex: 'nothing', value: undefined, expected: true, last: true }
+            ]);
+        });
+
+        it('should diff arrays that have non-numerical property names', function () {
+            var a = [1, 2, 3];
+            a.foo = 123;
+            a.bar = 456;
+            a.quux = {};
+
+            var b = [1, 2, 3];
+            b.bar = 456;
+            b.baz = 789;
+            b.quux = false;
+            return expect(promiseArrayChanges(a, b, function (a, b, aIndex, bIndex, callback) {
+                callback(a === b);
+            }, function (a, b, aIndex, bIndex, callback) {
+                callback(a === b);
+            }, true), 'when fulfilled', 'to equal', [
+                { type: 'equal', value: 1, expected: 1, actualIndex: 0, expectedIndex: 0 },
+                { type: 'equal', value: 2, expected: 2, actualIndex: 1, expectedIndex: 1 },
+                { type: 'equal', value: 3, expected: 3, actualIndex: 2, expectedIndex: 2 },
+                { type: 'remove', value: 123, actualIndex: 'foo' },
+                { type: 'equal', value: 456, expected: 456, actualIndex: 'bar', expectedIndex: 'bar' },
+                { type: 'similar', value: {}, expected: false, actualIndex: 'quux', expectedIndex: 'quux' },
+                { type: 'insert', value: 789, expectedIndex: 'baz', last: true }
+            ]);
+        });
+
+        it('should support an array of specific non-numerical keys to diff', function () {
+            var a = [1];
+            a.foo = 123;
+            a.bar = 789;
+
+            var b = [1];
+            a.foo = 456;
+            a.bar = false;
+            return expect(promiseArrayChanges(a, b, function (a, b, aIndex, bIndex, callback) {
+                callback(a === b);
+            }, function (a, b, aIndex, bIndex, callback) {
+                callback(a === b);
+            }, [ 'foo' ]), 'when fulfilled', 'to equal', [
+                { type: 'equal', actualIndex: 0, expectedIndex: 0, value: 1, expected: 1 },
+                { type: 'remove', actualIndex: 'foo', value: 456, last: true }
+            ]);
+        });
     });
 
     it('should report the expectedIndex of equal elements when arrays are identical', function () {
