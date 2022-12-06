@@ -30,7 +30,7 @@
     "browserify": "10.2.4",
     "bundle-collapser": "1.2.0",
     "chance-generators": "1.18.0",
-    "coveralls": "2.11.2",
+    "coveralls": "2.13.3",
     "istanbul": "0.3.17",
     "jshint": "2.7.0",
     "mocha": "2.2.5",
